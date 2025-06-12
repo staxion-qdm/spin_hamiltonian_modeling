@@ -1,7 +1,7 @@
 import numpy as np
 import itertools as itt
 from matplotlib.collections import LineCollection
-from spectroscopy_analysis_functions import S_operators as sops
+from spin_hamiltonian_modeling import S_operators as sops
 import scipy as scp
 
 

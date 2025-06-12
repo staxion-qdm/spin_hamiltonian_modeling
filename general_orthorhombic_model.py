@@ -1,6 +1,6 @@
 import numpy as np
 
-from spectroscopy_analysis_functions import S_operators as sops
+from spin_hamiltonian_modeling import S_operators as sops
 
 # constants
 h = 4.135667696e-15                 # [eV * s]

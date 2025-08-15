@@ -63,12 +63,12 @@ def esr_spectra(Ham_proc, Bz_vals, temperature=0.01):
         # sort the energy transitions
         e_transitions.append(t_info[sortEind,0])
         # sort the transition probabilities using the sorted index for energy transitions
-        e_prob.append(t_info[sortEind,1])
+        e_prob.append(t_info[sortEind,1]/np.max(t_info[sortEind,1]))
         transition_inds.append([t_info[sortEind,2:3], t_info[sortEind,2:3]])
 
     # convert energy to frequency in GHz
     ftran = np.array(e_transitions)/(h*1e9)
     # normalize the probability
-    eprob = np.array(e_prob)/np.max(np.array(e_prob))
+    eprob = np.array(e_prob)
 
     return ftran, eprob

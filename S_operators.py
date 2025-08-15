@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.linalg import expm
 
 def Splus(S):
     # initialize matrix and m values
@@ -81,6 +82,35 @@ class S_operators_S_I:
         self.Im = np.kron(np.eye(self.Sdim), Sminus(Ival))
         self.Ivec = np.array([self.Ix, self.Iy, self.Iz])
 
+
+def SO_power(op, power):
+    """
+    Raises the operator `op` to the specified `power`.
+    :param op: Operator matrix (numpy array).
+    :param power: Integer power to raise the operator.
+    :return: Raised operator matrix.
+    """
+    if power == 0:
+        return np.eye(op.shape[0])  # Identity matrix
+    elif power < 0:
+        raise ValueError("Negative powers are not supported for operator matrices.")
+    else:
+        result = np.eye(op.shape[0])  # Start with identity matrix
+        for _ in range(power):
+            result = result @ op  # Matrix multiplication
+        return result
+    
+
+def symmprod(opA, opB):
+    """
+    Computes the symmetric product of two operator matrices.
+    :param opA: First operator matrix (numpy array).
+    :param opB: Second operator matrix (numpy array).
+    :return: Symmetric product matrix.
+    """
+    return 0.5 * (opA @ opB + opB @ opA)  # Symmetric product
+
+
 #############################
 # Rotation Matrix Operators #
 #############################
@@ -102,3 +132,19 @@ def Rx(theta):
 
 def Rotmat(alpha, beta, theta):
     return Rz(theta) @ Ry(beta) @ Rx(alpha)
+
+
+############################
+# Spin Rotation Operators  #
+############################
+
+def R_zyz(so, alpha, beta, gamma):
+    """
+    Returns the rotation operator for a spin operator in the ZYZ convention. Angles in radians.
+    :param so: Spin operator object containing Sx, Sy, Sz matrices.
+    :param alpha: Rotation angle around the Z-axis.
+    :param beta: Rotation angle around the Y-axis.
+    :param gamma: Rotation angle around the new Z-axis.
+    :return: Rotation operator matrix.
+    """
+    return expm(-1j * alpha * so.Sz) @ expm(-1j * beta * so.Sy) @ expm(-1j * gamma * so.Sz)

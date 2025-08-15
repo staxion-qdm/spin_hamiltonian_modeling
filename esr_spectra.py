@@ -33,6 +33,14 @@ def energy_transitions_np(Ham, eigvecs, eigvals):
 
 
 def esr_spectra(Ham_proc, Bz_vals):
+    """
+    Calculate the ESR spectra for a given Hamiltonian processor and magnetic field values.
+
+    :param Ham_proc: Hamiltonian processor object that defines the Hamiltonian.
+    :param Bz_vals: Array of magnetic field values in Tesla.
+    :return: Frequencies of transitions and their corresponding probabilities.
+    :rtype: tuple (frequencies (Hz), probabilities)
+    """
     # initialize arrays to append for each B point
     e_transitions = []
     e_prob = []
@@ -54,8 +62,8 @@ def esr_spectra(Ham_proc, Bz_vals):
         e_prob.append(t_info[sortEind,1])
         transition_inds.append([t_info[sortEind,2:3], t_info[sortEind,2:3]])
 
-    # convert energy to frequency in GHz
-    ftran = np.array(e_transitions)/(h*1e9)
+    # convert energy to frequency in Hz
+    ftran = np.array(e_transitions)/h
     # normalize the probability
     eprob = np.array(e_prob)/np.max(np.array(e_prob))
 

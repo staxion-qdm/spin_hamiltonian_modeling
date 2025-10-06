@@ -72,3 +72,25 @@ def esr_spectra(Ham_proc, Bz_vals, temperature=0.01):
     eprob = np.array(e_prob)
 
     return ftran, eprob
+
+
+def energy_lines(Ham_proc, Bz_vals):
+    # initialize arrays to append for each B point
+    e_levels = []
+    eigvecarr = []
+    
+    # calculate eigenenergies for each B and reorder according to energy values
+    for i in range(len(Bz_vals)):
+        # calculate eigenstates and eigenvalues of the hamiltonian
+        Ham = Ham_proc.Ham(Bz_vals[i])
+        eigvals, eigvecs = np.linalg.eigh(Ham)
+        # sort indices according to energy values
+        sortEind = np.argsort(eigvals)
+        # append eigenvalues
+        e_levels.append(eigvals[sortEind])
+        eigvecarr.append(eigvecs[sortEind])
+
+    # convert energy to frequency in eV
+    elevs = np.array(e_levels)
+
+    return elevs, np.array(eigvecarr)

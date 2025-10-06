@@ -39,7 +39,7 @@ class orthorhom_ham_rot:
         self.Bvec = np.array([0, 0, 0])
         self.Rmat = sops.Rotmat(alpha_rad, beta_rad, theta_rad)
         # define rotated matrices
-        self.gmat_rot = self.Rmat @ self.gmat @ self.Rmat.T
+        # self.gmat_rot = self.Rmat @ self.gmat @ self.Rmat.T
         self.Dmat_rot = self.Rmat @ self.Dmat @ self.Rmat.T
         # initialize hamiltonians
         self.ham_zeeman = 0
@@ -50,7 +50,7 @@ class orthorhom_ham_rot:
         # define the B field vector
         self.Bvec = np.array([0, 0, Bz])
         # define the hamiltonians
-        self.ham_zeeman = muB * np.einsum('i,ij,jkl->kl', self.Bvec, self.gmat_rot, self.so.Svec)
+        self.ham_zeeman = muB * np.einsum('i,ij,jkl->kl', self.Bvec, self.gmat, self.so.Svec)
         self.ham_zf = h * np.einsum('ikl,ij,jlm->km', self.so.Svec, self.Dmat_rot, self.so.Svec)
         self.ham_hf = h* self.A * (self.so.Sx @ self.so.Ix + self.so.Sy @ self.so.Iy + self.so.Sz @ self.so.Iz)
         total_ham = self.ham_zeeman + self.ham_zf + self.ham_hf

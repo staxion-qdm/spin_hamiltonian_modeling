@@ -83,6 +83,31 @@ class S_operators_S_I:
         self.Ivec = np.array([self.Ix, self.Iy, self.Iz])
 
 
+
+class S_operators_S_L:
+    def __init__(self, Sval, Lval):
+        self.Sval = Sval
+        self.Lval = Lval
+        self.Sdim = int(2*Sval + 1)
+        self.Ldim = int(2*Lval + 1)
+        self.dim = self.Sdim * self.Ldim
+        # define S operators
+        self.Sz = np.kron(Szop(Sval), np.eye(self.Ldim))
+        self.Sy = np.kron(Syop(Sval), np.eye(self.Ldim))
+        self.Sx = np.kron(Sxop(Sval), np.eye(self.Ldim))
+        self.Sp = np.kron(Splus(Sval), np.eye(self.Ldim))
+        self.Sm = np.kron(Sminus(Sval), np.eye(self.Ldim))
+        self.Svec = np.array([self.Sx, self.Sy, self.Sz])
+        # define L operators
+        self.Lz = np.kron(np.eye(self.Sdim), Szop(Lval))
+        self.Ly = np.kron(np.eye(self.Sdim), Syop(Lval))
+        self.Lx = np.kron(np.eye(self.Sdim), Sxop(Lval))
+        self.Lp = np.kron(np.eye(self.Sdim), Splus(Lval))
+        self.Lm = np.kron(np.eye(self.Sdim), Sminus(Lval))
+        self.Lvec = np.array([self.Lx, self.Ly, self.Lz])
+
+
+
 def SO_power(op, power):
     """
     Raises the operator `op` to the specified `power`.

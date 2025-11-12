@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.linalg import expm
+import functools
 
 def Splus(S):
     # initialize matrix and m values
@@ -105,6 +106,86 @@ class S_operators_S_L:
         self.Lp = np.kron(np.eye(self.Sdim), Splus(Lval))
         self.Lm = np.kron(np.eye(self.Sdim), Sminus(Lval))
         self.Lvec = np.array([self.Lx, self.Ly, self.Lz])
+
+
+
+class MultiSpinOperators:
+    """
+    Efficient generalized spin operator builder for arbitrary spins.
+    Keeps lazy tensor structure to avoid full matrix blow-up until necessary.
+    """
+
+    def __init__(self, spins):
+        """
+        spins: list of tuples [(label, Sval), ...]
+        e.g. [('e', 1/2), ('n1', 1/2), ('n2', 1/2)]
+        """
+        self.spins = spins
+        self.labels = [lbl for lbl, _ in spins]
+        self.Svals = [S for _, S in spins]
+        self.dims = [int(2*S + 1) for S in self.Svals]
+        self.dim = np.prod(self.dims)
+        self._ops_cache = {}  # store built operators
+        if len(spins) >= 2:
+            self._assign_SI_aliases()
+
+    def _single_spin_matrix(self, Sval, op):
+        """Return single-spin operator matrix."""
+        if op == 'Sx': return Sxop(Sval)
+        if op == 'Sy': return Syop(Sval)
+        if op == 'Sz': return Szop(Sval)
+        if op == 'Sp': return Splus(Sval)
+        if op == 'Sm': return Sminus(Sval)
+        raise ValueError(f"Unknown operator {op}")
+
+    def get_op(self, label, op):
+        """Return full Hilbert-space operator for given spin and op (with caching)."""
+        key = (label, op)
+        if key in self._ops_cache:
+            return self._ops_cache[key]
+
+        idx = self.labels.index(label)
+        Sval = self.Svals[idx]
+        mat = self._single_spin_matrix(Sval, op)
+        op_list = [np.eye(d, dtype=complex) for d in self.dims]
+        op_list[idx] = mat
+        full_op = functools.reduce(np.kron, op_list)
+        self._ops_cache[key] = full_op
+        return full_op
+
+    def get_Svec(self, label):
+        """Return [Sx, Sy, Sz] vector for spin."""
+        return np.array([self.get_op(label, 'Sx'),
+                         self.get_op(label, 'Sy'),
+                         self.get_op(label, 'Sz')])
+    
+    def get_Sval(self, label=None):
+        """
+        Retrieve the spin quantum number S for a given label.
+        If no label is given, return a dict of all {label: Sval}.
+        """
+        if label is None:
+            return dict(zip(self.labels, self.Svals))
+        if label not in self.labels:
+            raise ValueError(f"Unknown spin label: {label}")
+        return self.Svals[self.labels.index(label)]
+
+    def _assign_SI_aliases(self):
+        """Keep old S/I naming for compatibility."""
+        e_lbl, n_lbl = self.labels[0], self.labels[1]
+        self.Sx = self.get_op(e_lbl, 'Sx')
+        self.Sy = self.get_op(e_lbl, 'Sy')
+        self.Sz = self.get_op(e_lbl, 'Sz')
+        self.Sp = self.get_op(e_lbl, 'Sp')
+        self.Sm = self.get_op(e_lbl, 'Sm')
+        self.Svec = self.get_Svec(e_lbl)
+
+        self.Ix = self.get_op(n_lbl, 'Sx')
+        self.Iy = self.get_op(n_lbl, 'Sy')
+        self.Iz = self.get_op(n_lbl, 'Sz')
+        self.Ip = self.get_op(n_lbl, 'Sp')
+        self.Im = self.get_op(n_lbl, 'Sm')
+        self.Ivec = self.get_Svec(n_lbl)
 
 
 

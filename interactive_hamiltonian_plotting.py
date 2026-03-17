@@ -4,6 +4,7 @@ import ipywidgets as ipw
 from functools import lru_cache
 import inspect
 from matplotlib.collections import LineCollection
+from spin_hamiltonian_modeling import esr_spectra as esrsp
 
 
 # === 1. GENERIC CACHED ESR FUNCTION ===
@@ -81,6 +82,66 @@ def interactive_spectrum(
     cscale_range=(0, 1)
 ):
     """Build full interactive ESR viewer for any Hamiltonian class."""
+    f0, e0 = cached_spectra(ham_class, **param_defaults)
+    ntrans = f0.shape[1]
+
+    # initial line collections
+    linecols = []
+    for i in range(ntrans):
+        points = np.array([Bzvals, f0[:, i]]).T.reshape(-1, 1, 2)
+        segments = np.concatenate([points[:-1], points[1:]], axis=1)
+        colors = np.ones((len(Bzvals)-1, 4))
+        colors[:, :3] = (0, 0, 0)
+        colors[:, 3] = np.clip(e0[:, i], 0, 1)[:-1]
+        lc = LineCollection(segments, colors=colors, lw=1.5)
+        ax.add_collection(lc)
+        linecols.append(lc)
+
+    layout = ipw.Layout(width='900px')
+    sliders = {
+        p: ipw.FloatSlider(
+            min=v[0], max=v[1], step=v[2], value=param_defaults[p],
+            description=p, layout=layout, continuous_update=False
+        )
+        for p, v in param_ranges.items()
+    }
+    sliders['cscale'] = ipw.FloatSlider(
+        min=cscale_range[0], max=cscale_range[1], step=0.01,
+        value=1.0, description='Color scale', layout=layout
+    )
+
+    update_func = make_updater(ax, linecols, ham_class, cached_spectra, Bzvals)
+    out = ipw.interactive_output(update_func, sliders)
+    display(ipw.VBox(list(sliders.values())), out)
+
+
+def build_param_dicts(param_spec):
+    param_ranges = {}
+    param_defaults = {}
+
+    for key, (default, pmin, pmax, step) in param_spec.items():
+        param_defaults[key] = default
+        param_ranges[key] = (pmin, pmax, step)
+
+    return param_ranges, param_defaults
+
+
+# === 3. INITIALIZATION ===
+def spectrum_interactive(
+    ham_class,
+    param_spec,
+    so,
+    sto,
+    decimals_cache,
+    ax,
+    Bzvals,
+    cscale_range=(0, 1)
+):
+    """Build full interactive ESR viewer for any Hamiltonian class."""
+    param_ranges, param_defaults = build_param_dicts(param_spec)
+
+    cached_spectra = make_cached_spectra(esrsp.esr_spectra, so=so, sto=sto, Bzvals=Bzvals, decimals_cache=decimals_cache)
+
     f0, e0 = cached_spectra(ham_class, **param_defaults)
     ntrans = f0.shape[1]
 
